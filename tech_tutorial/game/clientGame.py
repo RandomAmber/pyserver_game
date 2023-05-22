@@ -92,7 +92,7 @@ def redrawWindow(win,player, player2):
     player.draw(win)
     player2.draw(win)
 
-    draw_grid()
+    #draw_grid()
     pygame.display.update()
 
 
@@ -110,6 +110,11 @@ def main():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
+
+        if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    run = False
+                    pygame.quit()
 
         p.move()
         redrawWindow(win, p, p2)
