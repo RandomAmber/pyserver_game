@@ -3,6 +3,7 @@ from pygame.locals import *
 
 pygame.init()
 
+
 screen_width = 1000
 screen_height = 1000
 
@@ -17,10 +18,79 @@ tile_size = 50
 # sun_img = pygame.image.load('img/sun.png')
 bg_img = pygame.image.load('img/sky.png')
 
-def draw_grid():
-    for line in range(0, 20):
-        pygame.draw.line(screen, (255, 255, 255), (0, line * tile_size), (screen_width, line * tile_size))
-        pygame.draw.line(screen, (255, 255, 255), (line * tile_size, 0), (line * tile_size, screen_height))
+# def draw_grid():
+#     for line in range(0, 20):
+#         pygame.draw.line(screen, (255, 255, 255), (0, line * tile_size), (screen_width, line * tile_size))
+#         pygame.draw.line(screen, (255, 255, 255), (line * tile_size, 0), (line * tile_size, screen_height))
+
+
+class Player():
+    def __init__(self, x, y):
+        img = pygame.image.load('img/guy1.png')
+        self.image = pygame.transform.scale(img, (30, 70))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
+        self.vel_y = 0
+        self.Jumped = False
+        
+        
+        
+    def update(self):
+        dx = 0
+        dy = 0
+        
+        #get keypresses
+        key = pygame.key.get_pressed()
+        if key[pygame.K_UP] and self.Jumped == False:
+            self.vel_y = -5
+            self.Jumped = True
+        if key[pygame.K_UP] == False:
+            self.Jumped = False
+        if key[pygame.K_LEFT]:
+            dx -= 1
+        if key[pygame.K_RIGHT]:
+            dx += 1
+        
+        #add gravity
+        self.vel_y += 0.1
+        if self.vel_y > 1:
+            self.vel_y = 1
+        dy += self.vel_y
+        
+        #check for collision
+        for tile in world.tile_list:
+            #check for coll in X
+            if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
+                dx = 0
+            
+            
+            #check for coll in Y
+            if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
+                #check if below ground i.e jumping
+                if self.vel_y < 0:
+                    dy = tile[1].bottom - self.rect.top
+                #check if above ground i.e falling
+                if self.vel_y >= 0:
+                    dy = tile[1].top - self.rect.bottom
+        
+        
+        
+            
+        #update player coordinates
+        self.rect.x += dx
+        self.rect.y += dy
+        
+        
+        if self.rect.bottom > screen_height:
+            self.rect.bottom = screen_height
+            dy = 0
+        
+        #draw player onto screen
+        screen.blit(self.image, self.rect)
+        pygame.draw.rect(screen, (255, 255, 255), self.rect, 2)
 
 
 
@@ -56,6 +126,7 @@ class World():
     def draw(self):
         for tile in self.tile_list:
             screen.blit(tile[0], tile[1])
+            pygame.draw.rect(screen, (255, 255, 255), tile[1], 1 )
 
 
 
@@ -72,7 +143,7 @@ world_data = [
 [1, 0, 2, 0, 0, 7, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], 
 [1, 0, 0, 2, 0, 0, 4, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 0, 0, 1], 
 [1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 1], 
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], 
+[1, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], 
 [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 7, 0, 0, 0, 0, 2, 0, 1], 
 [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], 
 [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 2, 1], 
@@ -84,18 +155,20 @@ world_data = [
 
 
 
-
+player = Player(100, screen_height - 130)
 world = World(world_data)
 
 run = True
 while run:
-
+    
+    
     screen.blit(bg_img, (0, 0))
    # screen.blit(sun_img, (100, 100))
 
     world.draw()
+    player.update()
 
-    draw_grid()
+   # draw_grid()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
